@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>7 Minute Workout</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
 
     <!-- 
       REMOVED Tone.js script. 
       We will use the native Web Audio API instead.
-    -->
-
-    <style>
+    --><style>
         /* Use the Inter font family */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body {
@@ -28,60 +25,49 @@
 </head>
 <body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen">
 
-    <!-- Main Workout Container -->
-    <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 rounded-2xl shadow-xl text-center">
+    <!-- Main Workout Container --><main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 rounded-2xl shadow-xl text-center">
         
-        <!-- Status: e.g., "WORKOUT", "REST" -->
-        <div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
+        <!-- Status: e.g., "WORKOUT", "REST" --><div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
             7 Minute Workout
         </div>
         
-        <!-- Exercise Name: e.g., "Jumping Jacks" -->
-        <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
+        <!-- Exercise Name: e.g., "Jumping Jacks" --><div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
             Get ready to start!
         </div>
 
-        <!-- Timer Circle (Clickable) -->
-        <div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full cursor-pointer shadow-inner flex items-center justify-center bg-gray-700">
-            <!-- SVG for progress circle -->
-            <svg class="w-full h-full" viewBox="0 0 120 120">
-                <!-- Background circle -->
-                <circle class="text-gray-600" cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" />
-                <!-- Progress circle (animated) -->
-                <circle id="progressCircle" class="text-blue-400" cx="60" cy="60" r="54" fill="none"
+        <!-- Timer Circle (NOT Clickable for Pause Anymore) --><div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full shadow-inner flex items-center justify-center bg-gray-700 cursor-default"> <!-- Changed cursor-pointer to cursor-default --><!-- SVG for progress circle --><svg class="w-full h-full" viewBox="0 0 120 120">
+                <!-- Background circle --><circle class="text-gray-600" cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" />
+                <!-- Progress circle (animated) --><circle id="progressCircle" class="text-blue-400" cx="60" cy="60" r="54" fill="none"
                     stroke="currentColor" stroke-width="12"
                     transform="rotate(-90 60 60)"
                     stroke-dasharray="339.29" 
                     stroke-dashoffset="0" />
             </svg>
             
-            <!-- Timer Text -->
-            <div id="timerDisplay" class="absolute text-7xl sm:text-8xl font-black text-blue-400">10</div>
+            <!-- Timer Text --><div id="timerDisplay" class="absolute text-7xl sm:text-8xl font-black text-blue-400">10</div>
             
-            <!-- Pause Overlay -->
-            <div id="pauseOverlay" class="absolute inset-0 w-full h-full rounded-full bg-gray-800/90 flex items-center justify-center hidden transition-opacity duration-300">
-                <!-- Pause Icon -->
-                <svg class="w-20 h-20 text-blue-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 100-2H8V8a1 1 0 00-1-1zm3 0a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            <!-- Pause / Play Overlay --><div id="pausePlayOverlay" class="absolute inset-0 w-full h-full rounded-full bg-gray-800/90 flex items-center justify-center hidden transition-opacity duration-300">
+                <!-- Pause Icon (initially shown when paused) --><svg id="pauseIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 011-1h1a1 1 0 110 2H8a1 1 0 01-1-1zm5 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <!-- Play Icon (shown when active) --><svg id="playIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
                 </svg>
             </div>
         </div>
 
-        <!-- Next Exercise -->
-        <div class="h-14">
+        <!-- Next Exercise --><div class="h-14">
             <div class="text-sm font-semibold text-gray-400 uppercase tracking-wide">NEXT UP:</div>
             <div id="nextExerciseEl" class="text-xl font-bold">Jumping Jacks</div>
         </div>
 
-        <!-- Start/Reset Button -->
-        <button id="startButton" class="w-full p-4 mt-6 bg-blue-500 text-white rounded-lg text-xl font-bold uppercase hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-800 transition-all duration-300 transform active:scale-95">
+        <!-- Start/Reset Button --><button id="startButton" class="w-full p-4 mt-6 bg-blue-500 text-white rounded-lg text-xl font-bold uppercase hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-800 transition-all duration-300 transform active:scale-95">
             Start Workout
         </button>
 
     </main>
 
-    <!-- Generic Message Box (for errors, etc.) -->
-    <div id="messageBox" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+    <!-- Generic Message Box (for errors, etc.) --><div id="messageBox" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
             <h3 id="messageTitle" class="text-lg font-bold mb-4">Message</h3>
             <p id="messageText" class="text-gray-300 mb-6">This is a message.</p>
@@ -102,7 +88,9 @@
             const timerEl = document.getElementById('timerEl');
             const nextExerciseEl = document.getElementById('nextExerciseEl');
             const startButton = document.getElementById('startButton');
-            const pauseOverlay = document.getElementById('pauseOverlay');
+            const pausePlayOverlay = document.getElementById('pausePlayOverlay'); // Renamed from pauseOverlay
+            const pauseIcon = document.getElementById('pauseIcon');
+            const playIcon = document.getElementById('playIcon');
             const progressCircle = document.getElementById('progressCircle');
 
             // --- Message Box Elements ---
@@ -259,7 +247,9 @@
                 startTimer();
 
                 startButton.textContent = "Pause"; // Changed from "Restart Workout"
-                pauseOverlay.classList.add('hidden');
+                pausePlayOverlay.classList.add('hidden'); // Hide overlay
+                pauseIcon.classList.add('hidden'); // Ensure pause icon is hidden
+                playIcon.classList.remove('hidden'); // Show play icon during active workout
             }
 
             /**
@@ -284,6 +274,9 @@
                     playCompleteChime();
                     isStarted = false; // This will make the button restart the workout
                     clearInterval(timer);
+                    pausePlayOverlay.classList.remove('hidden'); // Show overlay
+                    pauseIcon.classList.remove('hidden'); // Show pause icon
+                    playIcon.classList.add('hidden'); // Hide play icon
                 }
             }
             
@@ -346,7 +339,9 @@
                     return; // Can't pause if not started or if complete
                 }
                 isPaused = !isPaused;
-                pauseOverlay.classList.toggle('hidden', !isPaused);
+                pausePlayOverlay.classList.toggle('hidden', !isPaused); // Toggle overlay visibility
+                pauseIcon.classList.toggle('hidden', !isPaused); // Show pause icon when paused
+                playIcon.classList.toggle('hidden', isPaused); // Show play icon when not paused
 
                 // Update button text based on new state
                 if (isPaused) {
@@ -453,8 +448,7 @@
             }
             
             // --- Event Listeners ---
-            startButton.addEventListener('click', handleStartPauseClick); // Changed from startWorkout
-            // timerEl.addEventListener('click', togglePause); // Removed this line
+            startButton.addEventListener('click', handleStartPauseClick); 
             
             // --- Initial Setup ---
             createWorkoutSequence();
@@ -464,5 +458,4 @@
     </script>
 </body>
 </html>
-
 
