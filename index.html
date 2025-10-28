@@ -33,7 +33,7 @@
         
         <!-- Current Exercise Name -->
         <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get Ready
+            Get ready to start!
         </div>
 
         <!-- Timer Element -->
@@ -57,9 +57,8 @@
             <div id="pausePlayOverlay" class="absolute inset-0 w-full h-full rounded-full bg-gray-800/90 flex items-center justify-center hidden transition-opacity duration-300">
                 
                 <!-- NEW Pause Icon -->
-                <svg id="pauseIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 24h-3c-1.104 0-2-.896-2-2v-20c0-1.104.896-2 2-2h3c1.104 0 2 .896 2 2v20c0 1.104-.896 2-2 2Z"/>
-                    <path d="M17 24h-3c-1.104 0-2-.896-2-2v-20c0-1.104.896-2 2-2h3c1.104 0 2 .896 2 2v20c0 1.104-.896 2-2 2Z"/>
+                <svg id="pauseIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M5 3H7V17H5V3ZM13 3H15V17H13V3Z" clip-rule="evenodd"></path>
                 </svg>
 
                 <!-- NEW Play Icon -->
@@ -253,9 +252,9 @@
 
                 // Use a tiny timeout to let the UI update (from loadExercise)
                 // before starting the first timer tick.
-                setTimeout(() => {
-                    startTimer();
-                }, 10);
+                // REMOVED: setTimeout(() => {
+                startTimer();
+                // REMOVED: }, 10);
 
                 startButton.textContent = "Pause";
                 pausePlayOverlay.classList.add('hidden'); // Hide overlay
@@ -279,10 +278,11 @@
                 // Set to 0 progress (full circle / empty)
                 // We set it to the full circumference (empty)
                 progressCircle.style.strokeDashoffset = CIRCLE_CIRCUMFERENCE; 
-                // Force browser to apply the change immediately
-                void progressCircle.offsetWidth; 
-                // Re-enable animation for all future changes
-                progressCircle.style.transition = 'stroke-dashoffset 1s linear'; 
+                
+                // REMOVED: Force browser to apply the change immediately
+                // REMOVED: void progressCircle.offsetWidth; 
+                // REMOVED: Re-enable animation for all future changes
+                // REMOVED: progressCircle.style.transition = 'stroke-dashoffset 1s linear'; 
                 
                 exerciseEl.textContent = current.name;
                 nextExerciseEl.textContent = next.name;
@@ -307,6 +307,12 @@
             function startTimer() {
                 clearInterval(timer); // Clear any existing timer
                 
+                // **FIX**: Force browser to paint the reset from loadExercise *before* re-enabling animation
+                void progressCircle.offsetWidth; 
+                
+                // **FIX**: Re-enable animation *before* the first tick
+                progressCircle.style.transition = 'stroke-dashoffset 1s linear';
+
                 // Call tick immediately to start the animation for the *first* second (e.g., "10")
                 tick(); 
                 
@@ -363,9 +369,9 @@
                         // **FIX**: Use a tiny timeout
                         // This forces the browser to apply the instant reset (in loadExercise)
                         // *before* starting the new animation for the first second.
-                        setTimeout(() => {
-                            startTimer();
-                        }, 10); // A very small delay is all that's needed
+                        // REMOVED: setTimeout(() => {
+                        startTimer();
+                        // REMOVED: }, 10); // A very small delay is all that's needed
                     }
                 }
             }
@@ -524,4 +530,5 @@
     </script>
 </body>
 </html>
+
 
