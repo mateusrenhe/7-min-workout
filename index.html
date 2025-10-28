@@ -199,6 +199,20 @@
             // --- Core Functions ---
 
             /**
+             * Handles clicks on the main button
+             * Starts, pauses, or resumes the workout
+             */
+            async function handleStartPauseClick() {
+                if (!isStarted) {
+                    // This is the first "Start Workout" click or a "Start Over" click
+                    await startWorkout();
+                } else {
+                    // Workout is in progress, so toggle pause
+                    togglePause();
+                }
+            }
+
+            /**
              * Generates the full workout sequence array
              */
             function createWorkoutSequence() {
@@ -244,7 +258,7 @@
                 loadExercise(currentExerciseIndex);
                 startTimer();
 
-                startButton.textContent = "Restart Workout";
+                startButton.textContent = "Pause"; // Changed from "Restart Workout"
                 pauseOverlay.classList.add('hidden');
             }
 
@@ -268,7 +282,7 @@
                 if (current.type === 'complete') {
                     startButton.textContent = "Start Over?";
                     playCompleteChime();
-                    isStarted = false;
+                    isStarted = false; // This will make the button restart the workout
                     clearInterval(timer);
                 }
             }
@@ -333,6 +347,13 @@
                 }
                 isPaused = !isPaused;
                 pauseOverlay.classList.toggle('hidden', !isPaused);
+
+                // Update button text based on new state
+                if (isPaused) {
+                    startButton.textContent = "Resume";
+                } else {
+                    startButton.textContent = "Pause";
+                }
             }
 
             // --- UI & Audio Helper Functions ---
@@ -432,8 +453,8 @@
             }
             
             // --- Event Listeners ---
-            startButton.addEventListener('click', startWorkout);
-            timerEl.addEventListener('click', togglePause);
+            startButton.addEventListener('click', handleStartPauseClick); // Changed from startWorkout
+            // timerEl.addEventListener('click', togglePause); // Removed this line
             
             // --- Initial Setup ---
             createWorkoutSequence();
@@ -443,4 +464,5 @@
     </script>
 </body>
 </html>
+
 
