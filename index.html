@@ -19,7 +19,7 @@
         }
         /* Style for the SVG progress circle transition */
         #progressCircle {
-            transition: stroke-dashoffset 1s ease-out; /* Changed linear to ease-out */
+            transition: stroke-dashoffset 1s linear; /* Reverted back to linear for smooth, non-jumpy animation */
         }
     </style>
 </head>
@@ -260,9 +260,20 @@
                 const next = workoutSequence[index + 1] || { name: "All Done!" };
 
                 timeLeft = current.duration;
-                updateTimerDisplay();
+                
+                // **NEW**: Manually set initial state *before* first animation
+                timerDisplay.textContent = timeLeft;
+                // Disable animation just for this one-time reset
+                progressCircle.style.transition = 'none'; 
+                // Set to 0 progress (full circle)
+                progressCircle.style.strokeDashoffset = CIRCLE_CIRCUMFERENCE; 
+                // Force browser to apply the change immediately
+                void progressCircle.offsetWidth; 
+                // Re-enable animation for all future changes
+                progressCircle.style.transition = 'stroke-dashoffset 1s linear'; 
 
-                // statusEl.textContent = current.type === 'work' ? 'Workout' : current.type; // <-- User wants this to remain "7 Minute Workout"
+                // updateTimerDisplay(); // Don't call this, it would start animation
+                
                 exerciseEl.textContent = current.name;
                 nextExerciseEl.textContent = next.name;
 
@@ -285,6 +296,11 @@
              */
             function startTimer() {
                 clearInterval(timer); // Clear any existing timer
+                
+                // **NEW**: Call tick immediately to start the animation for the *first* second (e.g., "10")
+                tick(); 
+                
+                // Then set the interval to call tick every second after that
                 timer = setInterval(tick, 1000);
             }
 
@@ -297,24 +313,28 @@
                 }
 
                 if (timeLeft <= 0) {
-                    // timeLeft is 0. updateTimerDisplay() just set the circle to animate to full (offset=0).
-                    // We must wait 1s for that animation to complete before loading the next exercise.
+                    // This handles the case *after* the last second (e.g., "1") has finished its animation
                     clearInterval(timer); // Stop this timer from running again
                     
+                    // We *still* wait 1s for the last animation (from 1 to 0) to finish
                     setTimeout(() => {
                         handleTimerEnd(); // Now, 1s later, load the next thing
                     }, 1000); // 1000ms = 1s, matching the CSS transition
 
                     return; // Exit the tick function
                 }
-                
-                timeLeft--;
+
+                // **NEW**: Call updateTimerDisplay *before* decrementing
+                // This updates the animation for the *current* timeLeft
                 updateTimerDisplay();
 
                 // Play audio cues
                 if (timeLeft === 3 || timeLeft === 2 || timeLeft === 1) {
                     playCountdownBeep();
                 }
+                
+                // Decrement timeLeft *after* updating the display
+                timeLeft--;
             }
             
             /**
@@ -364,14 +384,22 @@
              * Updates the timer display and progress circle
              */
             function updateTimerDisplay() {
-                timerDisplay.textContent = timeLeft;
+                // Display the *current* time left (e.g., "10", "9", ..., "1")
+                timerDisplay.textContent = timeLeft; 
+                
                 const totalDuration = workoutSequence[currentExerciseIndex].duration;
                 
-                // Calculate progress (0 to 1)
-                const progress = totalDuration > 0 ? (totalDuration - timeLeft) / totalDuration : 0;
+                // **NEW PROGRESS LOGIC**
+                // Calculate the progress % for the *end* of this second.
+                // e.g., when timeLeft=10 (1st sec), progress animates to 1/10
+                // e.g., when timeLeft=1 (last sec), progress animates to 10/10
+                const progress = totalDuration > 0 ? (totalDuration - timeLeft + 1) / totalDuration : 0;
+                
+                // We cap progress at 1 (100%)
+                const cappedProgress = Math.min(progress, 1);
                 
                 // Calculate SVG dash offset
-                const offset = CIRCLE_CIRCUMFERENCE * (1 - progress);
+                const offset = CIRCLE_CIRCUMFERENCE * (1 - cappedProgress);
                 progressCircle.style.strokeDashoffset = offset;
             }
 
@@ -465,6 +493,7 @@
     </script>
 </body>
 </html>
+
 
 
 
