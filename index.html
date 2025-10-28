@@ -33,7 +33,7 @@
         
         <!-- Current Exercise Display -->
         <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get Ready
+            Get ready to start!
         </div>
 
         <!-- Timer Element -->
@@ -196,6 +196,7 @@
                 }
 
                 if (!isStarted) {
+                    playWorkoutStartChime(); // Play the new start sound
                     startWorkout();
                 } else {
                     togglePause();
@@ -434,6 +435,13 @@
                 playNote(1046.50, 0.4, 'sine'); // C6
             }
             
+            function playWorkoutStartChime() {
+                if (!isAudioReady || !audioContext) return;
+                playNote(261.63, 0.2, 'triangle'); // C4
+                playNote(329.63, 0.2, 'triangle'); // E4
+                playNote(392.00, 0.2, 'triangle'); // G4
+            }
+            
             // --- Event Listeners ---
             startButton.addEventListener('click', handleStartPauseClick); 
             
@@ -445,4 +453,5 @@
     </script>
 </body>
 </html>
+
 
