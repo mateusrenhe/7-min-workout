@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>7 Minute Workout</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     
-    <!-- Favicon Link --><!-- Use "favicon.ico" if you converted it. Place favicon.ico in the same directory as this HTML file. --><link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <!-- If you didn't convert to .ico and are using PNG directly, place favicon.png in the same directory: --><!-- <link rel="icon" type="image/png" href="/favicon.png"> --><!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
         /* Use the Inter font family */
@@ -15,7 +16,6 @@
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            /* overscroll-behavior: none; */ /* REMOVED to allow pull-to-refresh */
         }
         /* Style for the SVG progress circle transition */
         #progressCircle {
@@ -23,59 +23,68 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100"> <!-- REMOVED flex items-center justify-center min-h-screen -->
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen">
 
-    <!-- 
-      UPDATED classes for mobile-first full-screen:
-      - Mobile (default): min-h-screen, w-full (no rounded corners or shadow)
-      - Desktop (sm: and up): sm:min-h-0, sm:max-w-md, sm:mx-auto, sm:my-8, sm:rounded-2xl, sm:shadow-xl
-    -->
-    <main class="w-full bg-gray-800 text-center min-h-screen sm:min-h-0 sm:max-w-md sm:mx-auto sm:my-8 sm:rounded-2xl sm:shadow-xl p-6 sm:p-10">
+    <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 rounded-2xl shadow-xl text-center">
         
-        <!-- Status Display --><div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
+        <!-- Status Display -->
+        <div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
             7 Minute Workout
         </div>
         
-        <!-- Current Exercise Display --><div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get ready to start!
+        <!-- Current Exercise Display -->
+        <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
+            Get Ready
         </div>
 
-        <!-- Timer Element --><div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full shadow-inner flex items-center justify-center bg-gray-700 cursor-default">
-            <!-- SVG Circle --><svg class="w-full h-full" viewBox="0 0 120 120">
-                <!-- Background Circle --><circle class="text-gray-600" cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" />
+        <!-- Timer Element -->
+        <div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full shadow-inner flex items-center justify-center bg-gray-700 cursor-default">
+            <!-- SVG Circle -->
+            <svg class="w-full h-full" viewBox="0 0 120 120">
+                <!-- Background Circle -->
+                <circle class="text-gray-600" cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" />
                 
-                <!-- Progress Circle --><circle id="progressCircle" class="text-blue-400" cx="60" cy="60" r="54" fill="none"
+                <!-- Progress Circle -->
+                <circle id="progressCircle" class="text-blue-400" cx="60" cy="60" r="54" fill="none"
                     stroke="currentColor" stroke-width="12"
                     transform="rotate(-90 60 60)"
                     stroke-dasharray="339.29" 
-                    stroke-dashoffset="339.29" /> <!-- Start at 0% full --></svg>
+                    stroke-dashoffset="339.29" /> <!-- Start at 0% full -->
+            </svg>
             
-            <!-- Timer Number Display --><div id="timerDisplay" class="absolute text-7xl sm:text-8xl font-black text-blue-400">10</div>
+            <!-- Timer Number Display -->
+            <div id="timerDisplay" class="absolute text-7xl sm:text-8xl font-black text-blue-400">10</div>
             
-            <!-- Pause/Play Icon Overlay --><div id="pausePlayOverlay" class="absolute inset-0 w-full h-full rounded-full bg-gray-800/90 flex items-center justify-center hidden transition-opacity duration-300">
+            <!-- Pause/Play Icon Overlay -->
+            <div id="pausePlayOverlay" class="absolute inset-0 w-full h-full rounded-full bg-gray-800/90 flex items-center justify-center hidden transition-opacity duration-300">
                 
-                <!-- Pause Icon (Cleaned up version) --><svg id="pauseIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <!-- Pause Icon (Cleaned up version) -->
+                <svg id="pauseIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 00-.75.75v12c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75v-12a.75.75 0 00-.75-.75h-2.5zm8 0a.75.75 0 00-.75.75v12c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75v-12a.75.75 0 00-.75-.75h-2.5z" clip-rule="evenodd" />
                 </svg>
 
-                <!-- Play Icon (Cleaned up version) --><svg id="playIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <!-- Play Icon (Cleaned up version) -->
+                <svg id="playIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
                 </svg>
             </div>
         </div>
 
-        <!-- Next Up Display --><div class="h-14 uppercase">
+        <!-- Next Up Display -->
+        <div class="h-14 uppercase">
             <div class="text-lg font-semibold text-gray-400 tracking-wide">Next Up:</div>
             <div id="nextExerciseEl" class="text-2xl font-bold">Jumping Jacks</div>
         </div>
 
-        <!-- Start/Pause/Resume Button --><button id="startButton" class="w-full p-4 mt-6 bg-blue-500 text-white rounded-lg text-xl font-bold uppercase hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-800 transition-all duration-300 transform active:scale-95">
+        <!-- Start/Pause/Resume Button -->
+        <button id="startButton" class="w-full p-4 mt-6 bg-blue-500 text-white rounded-lg text-xl font-bold uppercase hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-800 transition-all duration-300 transform active:scale-95">
             Start Workout
         </button>
 
     </main>
 
-    <!-- Generic Message Box --><div id="messageBox" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+    <!-- Generic Message Box -->
+    <div id="messageBox" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
             <h3 id="messageTitle" class="text-lg font-bold mb-4">Message</h3>
             <p id="messageText" class="text-gray-300 mb-6">This is a message.</p>
@@ -290,7 +299,7 @@
                 progressCircle.style.strokeDashoffset = offset;
 
                 // 4. Play audio cues for the *upcoming* number (e.g., when 4 shows, beep for 3)
-                if (timeLeft - 1 === 3 || timeLeft - 1 === 2 || timeLeft - 1 === 1) {
+                if (timeLeft - 1 === 2 || timeLeft - 1 === 1 || timeLeft - 1 === 0) {
                     playCountdownBeep();
                 }
 
