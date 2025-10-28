@@ -7,7 +7,7 @@
     
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <style>
         /* Use the Inter font family */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -18,7 +18,7 @@
         }
         /* Style for the SVG progress circle transition */
         #progressCircle {
-            transition: stroke-dashoffset 1s linear; /* Smooth, non-jumpy animation */
+            /* The transition is now controlled via JavaScript */
         }
     </style>
 </head>
@@ -26,55 +26,56 @@
 
     <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 rounded-2xl shadow-xl text-center">
         
-        <!-- Status Title -->
+        <!-- Status Display -->
         <div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
             7 Minute Workout
         </div>
         
-        <!-- Current Exercise Name -->
+        <!-- Current Exercise Display -->
         <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get ready to start!
+            Get Ready
         </div>
 
         <!-- Timer Element -->
         <div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full shadow-inner flex items-center justify-center bg-gray-700 cursor-default">
-            <!-- Background circle -->
+            <!-- SVG Circle -->
             <svg class="w-full h-full" viewBox="0 0 120 120">
+                <!-- Background Circle -->
                 <circle class="text-gray-600" cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" />
                 
-                <!-- Progress circle -->
+                <!-- Progress Circle -->
                 <circle id="progressCircle" class="text-blue-400" cx="60" cy="60" r="54" fill="none"
                     stroke="currentColor" stroke-width="12"
                     transform="rotate(-90 60 60)"
                     stroke-dasharray="339.29" 
-                    stroke-dashoffset="0" />
+                    stroke-dashoffset="339.29" /> <!-- Start at 0% full -->
             </svg>
             
-            <!-- Timer Number -->
+            <!-- Timer Number Display -->
             <div id="timerDisplay" class="absolute text-7xl sm:text-8xl font-black text-blue-400">10</div>
             
             <!-- Pause/Play Icon Overlay -->
             <div id="pausePlayOverlay" class="absolute inset-0 w-full h-full rounded-full bg-gray-800/90 flex items-center justify-center hidden transition-opacity duration-300">
                 
-                <!-- NEW Pause Icon -->
-                <svg id="pauseIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M5 3H7V17H5V3ZM13 3H15V17H13V3Z" clip-rule="evenodd"></path>
+                <!-- Pause Icon (Cleaned up version) -->
+                <svg id="pauseIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 00-.75.75v12c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75v-12a.75.75 0 00-.75-.75h-2.5zm8 0a.75.75 0 00-.75.75v12c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75v-12a.75.75 0 00-.75-.75h-2.5z" clip-rule="evenodd" />
                 </svg>
 
-                <!-- NEW Play Icon -->
+                <!-- Play Icon (Cleaned up version) -->
                 <svg id="playIcon" class="w-20 h-20 text-blue-400 hidden" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21.566 10.258C23.084 11.181 23.084 12.819 21.566 13.742L4.018 23.639C2.463 24.587 0.5 23.75 0.5 21.897L0.5 2.103C0.5 0.25 2.463 -0.587 4.018 0.361L21.566 10.258Z"/>
+                    <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
                 </svg>
             </div>
         </div>
 
-        <!-- Next Up Section -->
-        <div class="h-14">
-            <div class="text-lg font-semibold text-gray-400 uppercase tracking-wide">NEXT UP:</div>
-            <div id="nextExerciseEl" class="text-2xl font-bold uppercase">Jumping Jacks</div>
+        <!-- Next Up Display -->
+        <div class="h-14 uppercase">
+            <div class="text-lg font-semibold text-gray-400 tracking-wide">Next Up:</div>
+            <div id="nextExerciseEl" class="text-2xl font-bold">Jumping Jacks</div>
         </div>
 
-        <!-- Start/Pause Button -->
+        <!-- Start/Pause/Resume Button -->
         <button id="startButton" class="w-full p-4 mt-6 bg-blue-500 text-white rounded-lg text-xl font-bold uppercase hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-800 transition-all duration-300 transform active:scale-95">
             Start Workout
         </button>
@@ -114,11 +115,6 @@
             const messageText = document.getElementById('messageText');
             const messageCloseButton = document.getElementById('messageCloseButton');
 
-            /**
-             * Shows the generic message box (defined early)
-             * @param {string} title - The title of the message.
-             * @param {string} text - The body text of the message.
-             */
             function showMessage(title, text) {
                 messageTitle.textContent = title;
                 messageText.textContent = text;
@@ -131,7 +127,7 @@
 
             // --- Native Web Audio API Setup ---
             let audioContext;
-            let isAudioReady = false; // Flag to track if audio is unlocked
+            let isAudioReady = false;
 
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -139,28 +135,24 @@
             } catch (e) {
                 console.error("Web Audio API is not supported in this browser.", e);
                 showMessage("Audio Error", "Your browser does not support the Web Audio API needed for sounds.");
-                startButton.disabled = true; // Disable if audio is impossible
+                startButton.disabled = true;
                 startButton.textContent = "Audio Not Supported";
                 startButton.classList.add('opacity-50', 'cursor-not-allowed');
-                return; // Stop all further execution
+                return;
             }
 
-            // --- Try to unlock audio on *any* user click (e.g., in a restrictive iframe) ---
             async function unlockAudio() {
-                if (isAudioReady || !audioContext || audioContext.state === 'running') {
-                    isAudioReady = true;
-                    return;
-                }
-                
+                if (isAudioReady) return;
                 try {
                     await audioContext.resume();
                     isAudioReady = true;
-                    console.log("Audio Context Unlocked by user gesture.");
-                    document.body.removeEventListener('click', unlockAudio);
+                    console.log("Audio Context Unlocked.");
                 } catch (e) {
-                    console.warn("Could not unlock audio on click:", e);
+                    console.warn("Could not unlock audio context:", e);
                 }
             }
+            
+            // Try to unlock on any first click, for restrictive environments
             document.body.addEventListener('click', unlockAudio, { once: true });
             
             // --- Workout Definition ---
@@ -176,7 +168,7 @@
                 "High Knees",
                 "Lunge",
                 "Push-up & Rotation",
-                "Side Plank" // User can switch halfway
+                "Side Plank"
             ];
             
             const READY_TIME = 10;
@@ -193,25 +185,25 @@
 
             // --- Core Functions ---
 
-            /**
-             * Handles clicks on the main button
-             * Starts, pauses, or resumes the workout
-             */
             async function handleStartPauseClick() {
+                // Ensure audio is ready *before* starting
+                if (!isAudioReady) {
+                    await unlockAudio();
+                    if (!isAudioReady) {
+                        showMessage("Audio Error", "Could not start audio. Please click the screen once to enable audio, then try again.");
+                        return;
+                    }
+                }
+
                 if (!isStarted) {
-                    // This is the first "Start Workout" click or a "Start Over" click
-                    await startWorkout();
+                    startWorkout();
                 } else {
-                    // Workout is in progress, so toggle pause
                     togglePause();
                 }
             }
 
-            /**
-             * Generates the full workout sequence array
-             */
             function createWorkoutSequence() {
-                workoutSequence = []; // Reset sequence
+                workoutSequence = [];
                 workoutSequence.push({ type: 'ready', name: 'Get Ready', duration: READY_TIME });
 
                 EXERCISES.forEach((exercise, index) => {
@@ -224,259 +216,188 @@
                 workoutSequence.push({ type: 'complete', name: 'Workout Complete!', duration: 0 });
             }
 
-            /**
-             * Main function to start or reset the workout
-             */
-            async function startWorkout() {
-                // Check if audio is ready, if not, try to resume it
-                if (!isAudioReady && audioContext.state !== 'running') {
-                    try {
-                        await audioContext.resume();
-                        isAudioReady = true;
-                        console.log("Audio Context Resumed on workout start.");
-                    } catch (e) {
-                        console.error("AudioContext.resume() failed:", e);
-                        showMessage("Audio Error", "Could not start audio. Please ensure your browser allows audio playback and try again.");
-                        return; // Stop if we can't get audio
-                    }
-                }
-
-                // Reset all state variables
+            function startWorkout() {
                 isStarted = true;
                 isPaused = false;
                 currentExerciseIndex = 0;
                 clearInterval(timer);
                 
                 createWorkoutSequence();
-                loadExercise(currentExerciseIndex);
-
-                // Use a tiny timeout to let the UI update (from loadExercise)
-                // before starting the first timer tick.
-                // REMOVED: setTimeout(() => {
-                startTimer();
-                // REMOVED: }, 10);
+                loadExercise(currentExerciseIndex); // This will set up the first state
+                startTimer(); // This will immediately call tick()
 
                 startButton.textContent = "Pause";
-                pausePlayOverlay.classList.add('hidden'); // Hide overlay
-                pauseIcon.classList.add('hidden'); // Ensure pause icon is hidden
-                playIcon.classList.remove('hidden'); // Show play icon during active workout
+                pausePlayOverlay.classList.add('hidden');
+                pauseIcon.classList.add('hidden');
+                playIcon.classList.remove('hidden'); // Show play icon
             }
 
             /**
-             * Loads the exercise at the given index into the UI
+             * Loads an exercise, resets the timer display, and updates text.
+             * This function does NOT start the timer.
              */
             function loadExercise(index) {
                 const current = workoutSequence[index];
                 const next = workoutSequence[index + 1] || { name: "All Done!" };
 
                 timeLeft = current.duration;
-                
-                // **FIX**: Manually set initial state *before* first animation
-                timerDisplay.textContent = timeLeft;
-                // Disable animation just for this one-time reset
-                progressCircle.style.transition = 'none'; 
-                // Set to 0 progress (full circle / empty)
-                // We set it to the full circumference (empty)
-                progressCircle.style.strokeDashoffset = CIRCLE_CIRCUMFERENCE; 
-                
-                // REMOVED: Force browser to apply the change immediately
-                // REMOVED: void progressCircle.offsetWidth; 
-                // REMOVED: Re-enable animation for all future changes
-                // REMOVED: progressCircle.style.transition = 'stroke-dashoffset 1s linear'; 
-                
+
+                // Update status text
+                if (current.type === 'ready' || current.type === 'complete') {
+                    statusEl.textContent = "7 Minute Workout";
+                } else {
+                    statusEl.textContent = current.type; // 'work' or 'rest'
+                }
+
                 exerciseEl.textContent = current.name;
                 nextExerciseEl.textContent = next.name;
-
-                // Update colors based on state
                 updateColors(current.type);
+
+                // Instantly reset the timer display and circle
+                resetTimerDisplay(); 
 
                 if (current.type === 'complete') {
                     startButton.textContent = "Start Over?";
                     playCompleteChime();
-                    isStarted = false; // This will make the button restart the workout
+                    isStarted = false;
                     clearInterval(timer);
-                    pausePlayOverlay.classList.remove('hidden'); // Show overlay
+                    pausePlayOverlay.classList.remove('hidden');
                     pauseIcon.classList.remove('hidden'); // Show pause icon
-                    playIcon.classList.add('hidden'); // Hide play icon
+                    playIcon.classList.add('hidden');
                 }
             }
             
-            /**
-             * Starts the 1-second interval timer
-             */
             function startTimer() {
                 clearInterval(timer); // Clear any existing timer
-                
-                // **FIX**: Force browser to paint the reset from loadExercise *before* re-enabling animation
-                void progressCircle.offsetWidth; 
-                
-                // **FIX**: Re-enable animation *before* the first tick
-                progressCircle.style.transition = 'stroke-dashoffset 1s linear';
-
-                // Call tick immediately to start the animation for the *first* second (e.g., "10")
-                tick(); 
-                
-                // Then set the interval to call tick every second after that
-                timer = setInterval(tick, 1000);
+                tick(); // Call tick immediately to start the first animation
+                timer = setInterval(tick, 1000); // Then set the interval
             }
 
             /**
-             * The main timer "tick" function, called every second
+             * The main timer "tick" function.
+             * Shows the current number, *while* animating to the *next* number's state.
              */
             function tick() {
-                if (isPaused) {
-                    return; // Do nothing if paused
-                }
-
                 if (timeLeft <= 0) {
-                    // This handles the case *after* the last second (e.g., "1") has finished its animation
-                    clearInterval(timer); // Stop this timer from running again
-                    
-                    // Move to the next exercise immediately
-                    handleTimerEnd(); 
-
-                    return; // Exit the tick function
-                }
-
-                // Call updateTimerDisplay *before* decrementing
-                // This updates the animation for the *current* timeLeft
-                updateTimerDisplay();
-
-                // Play audio cues
-                if (timeLeft === 3 || timeLeft === 2 || timeLeft === 1) {
-                    playCountdownBeep();
+                    handleTimerEnd();
+                    return;
                 }
                 
-                // Decrement timeLeft *after* updating the display
+                // --- Animation Sync Fix ---
+                // 1. Show the *current* time left
+                timerDisplay.textContent = timeLeft;
+
+                // 2. Calculate the progress for the *end* of this second (i.e., timeLeft - 1)
+                const current = workoutSequence[currentExerciseIndex];
+                const totalDuration = current.duration;
+                
+                // Calculate progress for one second *from* now
+                const progress = (totalDuration - (timeLeft - 1)) / totalDuration;
+                const offset = CIRCLE_CIRCUMFERENCE * (1 - progress);
+
+                // 3. Set the 1s animation and start it
+                progressCircle.style.transition = 'stroke-dashoffset 1s linear';
+                progressCircle.style.strokeDashoffset = offset;
+
+                // 4. Play audio cues for the *upcoming* number
+                if (timeLeft - 1 === 3 || timeLeft - 1 === 2 || timeLeft - 1 === 1) {
+                    playCountdownBeep();
+                }
+
+                // 5. Decrement time *after* setting up the animation
                 timeLeft--;
             }
             
-            /**
-             * Called when a timer reaches 0. Loads next exercise or ends.
-             */
             function handleTimerEnd() {
+                clearInterval(timer);
                 currentExerciseIndex++;
                 
                 if (currentExerciseIndex < workoutSequence.length) {
                     const currentType = workoutSequence[currentExerciseIndex].type;
                     if (currentType === 'work' || currentType === 'rest') {
-                        playStartBeep(); // "Go" sound for next phase
+                        playStartBeep();
                     }
-                    loadExercise(currentExerciseIndex);
                     
-                    // Only restart timer if not complete
+                    loadExercise(currentExerciseIndex); 
+                    
                     if (currentType !== 'complete') {
-                        // **FIX**: Use a tiny timeout
-                        // This forces the browser to apply the instant reset (in loadExercise)
-                        // *before* starting the new animation for the first second.
-                        // REMOVED: setTimeout(() => {
-                        startTimer();
-                        // REMOVED: }, 10); // A very small delay is all that's needed
+                        startTimer(); // Start the timer for the new exercise
                     }
                 }
             }
 
-            /**
-             * Toggles the pause state of the workout
-             */
             function togglePause() {
                 if (!isStarted || workoutSequence[currentExerciseIndex].type === 'complete') {
-                    return; // Can't pause if not started or if complete
+                    return;
                 }
                 isPaused = !isPaused;
-                pausePlayOverlay.classList.toggle('hidden', !isPaused); // Toggle overlay visibility
-                pauseIcon.classList.toggle('hidden', !isPaused); // Show pause icon when paused
-                playIcon.classList.toggle('hidden', isPaused); // Show play icon when not paused
+                pausePlayOverlay.classList.toggle('hidden', !isPaused);
+                pauseIcon.classList.toggle('hidden', !isPaused);
+                playIcon.classList.toggle('hidden', isPaused);
 
-                // Update button text based on new state
                 if (isPaused) {
                     startButton.textContent = "Resume";
+                    // Stop the timer completely when pausing
+                    clearInterval(timer); 
                 } else {
                     startButton.textContent = "Pause";
+                    // Immediately start the timer again
+                    startTimer(); 
                 }
             }
 
             // --- UI & Audio Helper Functions ---
 
             /**
-             * Updates the timer display and progress circle
+             * Instantly resets the timer display and circle to the start state.
              */
-            function updateTimerDisplay() {
-                // Display the *current* time left (e.g., "10", "9", ..., "1")
-                timerDisplay.textContent = timeLeft; 
+            function resetTimerDisplay() {
+                timerDisplay.textContent = timeLeft;
                 
-                const totalDuration = workoutSequence[currentExerciseIndex].duration;
-                
-                // **NEW PROGRESS LOGIC**
-                // Calculate the progress % for the *end* of this second.
-                // e.g., when timeLeft=10 (1st sec), progress animates to 1/10
-                // e.g., when timeLeft=1 (last sec), progress animates to 10/10
-                const progress = totalDuration > 0 ? (totalDuration - timeLeft + 1) / totalDuration : 0;
-                
-                // We cap progress at 1 (100%)
-                const cappedProgress = Math.min(progress, 1);
-                
-                // Calculate SVG dash offset
-                // Full circle (empty) is CIRCLE_CIRCUMFERENCE
-                // 0 (full) is 0
-                const offset = CIRCLE_CIRCUMFERENCE * (1 - cappedProgress);
-                progressCircle.style.strokeDashoffset = offset;
+                // Instantly reset the circle to 0% full (offset = circumference)
+                progressCircle.style.transition = 'none';
+                progressCircle.style.strokeDashoffset = CIRCLE_CIRCUMFERENCE;
             }
 
-            /**
-             * Updates element colors based on the current state
-             * @param {string} type - 'ready', 'work', 'rest', or 'complete'
-             */
+
             function updateColors(type) {
                 let colorClass = 'blue';
-                let suffix = '400'; // Dark theme
-                let titleText = '7 Minute Workout'; // Default title
-
-                if (type === 'rest') {
-                    colorClass = 'green';
-                    titleText = 'REST';
-                }
-                if (type === 'work') {
-                    colorClass = 'blue';
-                    titleText = 'WORKOUT';
-                }
-                if (type === 'ready') {
-                    colorClass = 'indigo';
-                    titleText = '7 Minute Workout'; // Keep title during ready
-                }
+                let suffix = '400';
+                
+                if (type === 'work') colorClass = 'blue';
+                if (type === 'rest') colorClass = 'green';
+                if (type === 'ready') colorClass = 'indigo';
                 if (type === 'complete') {
                     colorClass = 'gray';
-                    suffix = '500'; 
-                    titleText = '7 Minute Workout'; // Keep title on complete
+                    suffix = '500';
                 }
-                
-                statusEl.textContent = titleText; // Set the title text
 
-                // Remove old colors
-                ['blue', 'green', 'indigo', 'gray'].forEach(c => {
-                    statusEl.classList.remove(`text-${c}-400`, `text-${c}-500`);
-                    timerDisplay.classList.remove(`text-${c}-400`, `text-${c}-500`);
-                    progressCircle.classList.remove(`text-${c}-400`, `text-${c}-500`);
+                // List of all possible colors to remove
+                const colors = ['blue', 'green', 'indigo', 'gray'];
+                const shades = ['400', '500', '600']; // Cover all bases
+
+                const elements = [statusEl, timerDisplay, progressCircle];
+
+                elements.forEach(el => {
+                    colors.forEach(c => {
+                        shades.forEach(s => {
+                            el.classList.remove(`text-${c}-${s}`);
+                        });
+                    });
+                });
+                
+                // Add new colors
+                elements.forEach(el => {
+                    el.classList.add(`text-${colorClass}-${suffix}`);
                 });
 
-                // Add new colors
-                // Only change status color if it's 'WORKOUT' or 'REST'
-                if (type === 'work' || type === 'rest') {
-                    statusEl.classList.add(`text-${colorClass}-${suffix}`);
-                } else {
-                    // Otherwise, keep it the "ready" color
-                    statusEl.classList.add(`text-indigo-${suffix}`);
+                // Special handling for title: don't change color if it's "7 Minute Workout"
+                if (type === 'ready' || type === 'complete') {
+                    statusEl.classList.remove(`text-${colorClass}-${suffix}`);
+                    statusEl.classList.add('text-blue-400'); // Default title color
                 }
-                timerDisplay.classList.add(`text-${colorClass}-${suffix}`);
-                progressCircle.classList.add(`text-${colorClass}-${suffix}`);
             }
 
-            /**
-             * Plays a note using the Web Audio API
-             * @param {number} frequency - The frequency of the note (in Hz)
-             * @param {number} duration - The duration of the note (in seconds)
-             * @param {string} type - The oscillator type ('sine', 'square', 'sawtooth', 'triangle')
-             */
             function playNote(frequency, duration, type = 'sine') {
                 if (!isAudioReady || !audioContext) return;
 
@@ -486,9 +407,8 @@
                 oscillator.type = type;
                 oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
                 
-                // Simple attack/decay envelope
                 gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01); // Quick attack
+                gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
 
                 oscillator.connect(gainNode);
@@ -498,18 +418,16 @@
                 oscillator.stop(audioContext.currentTime + duration);
             }
 
-
             function playCountdownBeep() {
-                playNote(880, 0.1, 'sine'); // High C
+                playNote(880, 0.1, 'sine');
             }
 
             function playStartBeep() {
-                playNote(440, 0.2, 'triangle'); // A4
+                playNote(440, 0.2, 'triangle');
             }
 
             function playCompleteChime() {
                 if (!isAudioReady || !audioContext) return;
-                // Play a simple C-E-G-C arpeggio
                 playNote(523.25, 0.3, 'sine'); // C5
                 playNote(659.25, 0.3, 'sine'); // E5
                 playNote(783.99, 0.3, 'sine'); // G5
@@ -522,13 +440,9 @@
             // --- Initial Setup ---
             createWorkoutSequence();
             loadExercise(0); // Load the "Get Ready" state initially
-            updateColors('ready'); // Manually set initial color
-            statusEl.classList.remove('text-indigo-400'); // Remove default
-            statusEl.classList.add('text-blue-400'); // Start with blue
 
         });
     </script>
 </body>
 </html>
-
 
