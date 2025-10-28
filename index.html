@@ -33,7 +33,7 @@
         
         <!-- Current Exercise Display -->
         <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get ready to start!
+            Get Ready
         </div>
 
         <!-- Timer Element -->
@@ -338,11 +338,26 @@
                 if (isPaused) {
                     startButton.textContent = "Resume";
                     // Stop the timer completely when pausing
-                    clearInterval(timer); 
+                    clearInterval(timer);
+                    
+                    // --- FIX FOR PAUSE/RESUME BUG ---
+                    // 1. Get the *exact* current position of the animation
+                    const computedOffset = window.getComputedStyle(progressCircle).strokeDashoffset;
+                    // 2. Turn off animations
+                    progressCircle.style.transition = 'none';
+                    // 3. Freeze the dial at its current position
+                    progressCircle.style.strokeDashoffset = computedOffset;
+                    
+                    // 4. (THIS IS THE FIX) Force the browser to apply the 'none' transition
+                    // and new offset immediately, cleaning the animation state.
+                    void progressCircle.offsetWidth;
+                    // ---------------------------------
+                    
                 } else {
                     startButton.textContent = "Pause";
-                    // Immediately start the timer again
-                    startTimer(); 
+                    // **THE FIX**: Use setTimeout, just like in handleTimerEnd()
+                    // to prevent the "slow reset" animation bug on resume.
+                    setTimeout(startTimer, 0); 
                 }
             }
 
@@ -453,5 +468,6 @@
     </script>
 </body>
 </html>
+
 
 
