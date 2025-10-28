@@ -6,8 +6,12 @@
     <title>7 Minute Workout</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Tone.js for audio synthesis -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+
+    <!-- 
+      REMOVED Tone.js script. 
+      We will use the native Web Audio API instead.
+    -->
+
     <style>
         /* Use the Inter font family */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -89,7 +93,7 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('load', () => {
             
             // --- DOM Elements ---
             const statusEl = document.getElementById('statusEl');
@@ -107,31 +111,62 @@
             const messageText = document.getElementById('messageText');
             const messageCloseButton = document.getElementById('messageCloseButton');
 
-            // --- Audio Synths (using Tone.js) ---
-            // We initialize them here to be ready for use
-            let countdownBeep, startBeep, completeSynth;
+            /**
+             * Shows the generic message box (defined early)
+             * @param {string} title - The title of the message.
+             * @param {string} text - The body text of the message.
+             */
+            function showMessage(title, text) {
+                messageTitle.textContent = title;
+                messageText.textContent = text;
+                messageBox.classList.remove('hidden');
+            }
             
-            function setupAudio() {
-                try {
-                    countdownBeep = new Tone.Synth({
-                        oscillator: { type: 'sine' },
-                        envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 }
-                    }).toDestination();
+            messageCloseButton.addEventListener('click', () => {
+                messageBox.classList.add('hidden');
+            });
 
-                    startBeep = new Tone.Synth({
-                        oscillator: { type: 'triangle' },
-                        envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.1 }
-                    }).toDestination();
+            // --- Native Web Audio API Setup ---
+            let audioContext;
+            let isAudioReady = false; // Flag to track if audio is unlocked
+
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') {
+                    isAudioReady = false;
+                } else if (audioContext.state === 'running') {
+                    isAudioReady = true;
+                }
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser.", e);
+                showMessage("Audio Error", "Your browser does not support the Web Audio API needed for sounds.");
+                startButton.disabled = true; // Disable if audio is impossible
+                startButton.textContent = "Audio Not Supported";
+                startButton.classList.add('opacity-50', 'cursor-not-allowed');
+                return; // Stop all further execution
+            }
+
+            // --- Try to unlock audio on *any* user click (e.g., in a restrictive iframe) ---
+            async function unlockAudio() {
+                if (isAudioReady || !audioContext || audioContext.state === 'running') {
+                    isAudioReady = true;
+                    return;
+                }
                 
-                    completeSynth = new Tone.PolySynth(Tone.Synth, {
-                        oscillator: { type: 'sine' },
-                        envelope: { attack: 0.05, decay: 0.2, sustain: 0.3, release: 0.5 }
-                    }).toDestination();
+                try {
+                    await audioContext.resume();
+                    isAudioReady = true;
+                    console.log("Audio Context Unlocked by user gesture.");
+                    document.body.removeEventListener('click', unlockAudio);
                 } catch (e) {
-                    console.error("Failed to initialize audio:", e);
-                    showMessage("Audio Error", "Could not initialize audio. Please refresh the page.");
+                    console.warn("Could not unlock audio on click:", e);
+                    // The main startWorkout function will handle the error visibly if it's still not running
                 }
             }
+            // Add this listener to the whole body, to catch the *first* user interaction
+            document.body.addEventListener('click', unlockAudio, { once: true });
+            
+            // REMOVED setupAudio() function, as it's no longer needed
 
             // --- Workout Definition ---
             const EXERCISES = [
@@ -184,18 +219,20 @@
              * Main function to start or reset the workout
              */
             async function startWorkout() {
-                if (!isStarted) {
-                    // This is the first start, initialize audio on user interaction
+                // Check if audio is ready, if not, try to resume it
+                if (!isAudioReady && audioContext.state !== 'running') {
                     try {
-                        await Tone.start();
-                        setupAudio();
-                        console.log("Audio Context Started");
+                        await audioContext.resume();
+                        isAudioReady = true;
+                        console.log("Audio Context Resumed on workout start.");
                     } catch (e) {
-                        console.error("Tone.start() failed:", e);
-                        showMessage("Audio Error", "Could not start audio. Please ensure your browser allows audio playback.");
-                        return;
+                        console.error("AudioContext.resume() failed:", e);
+                        showMessage("Audio Error", "Could not start audio. Please ensure your browser allows audio playback and try again.");
+                        return; // Stop if we can't get audio
                     }
                 }
+
+                // REMOVED setupAudio() block
 
                 // Reset all state variables
                 isStarted = true;
@@ -348,43 +385,55 @@
                 progressCircle.classList.add(`text-${colorClass}-${suffix}`);
             }
 
+            /**
+             * Plays a note using the Web Audio API
+             * @param {number} frequency - The frequency of the note (in Hz)
+             * @param {number} duration - The duration of the note (in seconds)
+             * @param {string} type - The oscillator type ('sine', 'square', 'sawtooth', 'triangle')
+             */
+            function playNote(frequency, duration, type = 'sine') {
+                if (!isAudioReady || !audioContext) return;
+
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                
+                // Simple attack/decay envelope
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01); // Quick attack
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+
+
             function playCountdownBeep() {
-                if (countdownBeep) {
-                    countdownBeep.triggerAttackRelease("C5", "0.1", Tone.now());
-                }
+                playNote(880, 0.1, 'sine'); // High C
             }
 
             function playStartBeep() {
-                if (startBeep) {
-                    startBeep.triggerAttackRelease("G4", "0.2", Tone.now());
-                }
+                playNote(440, 0.2, 'triangle'); // A4
             }
 
             function playCompleteChime() {
-                if (completeSynth) {
-                    const now = Tone.now();
-                    completeSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "0.5", now);
-                }
+                if (!isAudioReady || !audioContext) return;
+                const now = audioContext.currentTime;
+                // Play a simple C-E-G-C arpeggio
+                playNote(523.25, 0.3, 'sine'); // C5
+                playNote(659.25, 0.3, 'sine'); // E5
+                playNote(783.99, 0.3, 'sine'); // G5
+                playNote(1046.50, 0.4, 'sine'); // C6
             }
             
-            /**
-             * Shows the generic message box
-             * @param {string} title - The title of the message.
-             * @param {string} text - The body text of the message.
-             */
-            function showMessage(title, text) {
-                messageTitle.textContent = title;
-                messageText.textContent = text;
-                messageBox.classList.remove('hidden');
-            }
-
             // --- Event Listeners ---
             startButton.addEventListener('click', startWorkout);
             timerEl.addEventListener('click', togglePause);
-            
-            messageCloseButton.addEventListener('click', () => {
-                messageBox.classList.add('hidden');
-            });
             
             // --- Initial Setup ---
             createWorkoutSequence();
