@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 Minute Workout</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Tone.js for audio synthesis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <style>
+        /* Use the Inter font family */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Style for the SVG progress circle transition */
+        #progressCircle {
+            transition: stroke-dashoffset 1s linear;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen">
+
+    <!-- Main Workout Container -->
+    <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 rounded-2xl shadow-xl text-center">
+        
+        <!-- Status: e.g., "WORKOUT", "REST" -->
+        <div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
+            7 Minute Workout
+        </div>
+        
+        <!-- Exercise Name: e.g., "Jumping Jacks" -->
+        <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
+            Get ready to start!
+        </div>
+
+        <!-- Timer Circle (Clickable) -->
+        <div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full cursor-pointer shadow-inner flex items-center justify-center bg-gray-700">
+            <!-- SVG for progress circle -->
+            <svg class="w-full h-full" viewBox="0 0 120 120">
+                <!-- Background circle -->
+                <circle class="text-gray-600" cx="60" cy="60" r="54" fill="none" stroke="currentColor" stroke-width="12" />
+                <!-- Progress circle (animated) -->
+                <circle id="progressCircle" class="text-blue-400" cx="60" cy="60" r="54" fill="none"
+                    stroke="currentColor" stroke-width="12"
+                    transform="rotate(-90 60 60)"
+                    stroke-dasharray="339.29" 
+                    stroke-dashoffset="0" />
+            </svg>
+            
+            <!-- Timer Text -->
+            <div id="timerDisplay" class="absolute text-7xl sm:text-8xl font-black text-blue-400">10</div>
+            
+            <!-- Pause Overlay -->
+            <div id="pauseOverlay" class="absolute inset-0 w-full h-full rounded-full bg-gray-800/90 flex items-center justify-center hidden transition-opacity duration-300">
+                <!-- Pause Icon -->
+                <svg class="w-20 h-20 text-blue-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 100-2H8V8a1 1 0 00-1-1zm3 0a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Next Exercise -->
+        <div class="h-14">
+            <div class="text-sm font-semibold text-gray-400 uppercase tracking-wide">NEXT UP:</div>
+            <div id="nextExerciseEl" class="text-xl font-bold">Jumping Jacks</div>
+        </div>
+
+        <!-- Start/Reset Button -->
+        <button id="startButton" class="w-full p-4 mt-6 bg-blue-500 text-white rounded-lg text-xl font-bold uppercase hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-800 transition-all duration-300 transform active:scale-95">
+            Start Workout
+        </button>
+
+    </main>
+
+    <!-- Generic Message Box (for errors, etc.) -->
+    <div id="messageBox" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
+            <h3 id="messageTitle" class="text-lg font-bold mb-4">Message</h3>
+            <p id="messageText" class="text-gray-300 mb-6">This is a message.</p>
+            <button id="messageCloseButton" class="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-800">
+                OK
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- DOM Elements ---
+            const statusEl = document.getElementById('statusEl');
+            const exerciseEl = document.getElementById('exerciseEl');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerEl = document.getElementById('timerEl');
+            const nextExerciseEl = document.getElementById('nextExerciseEl');
+            const startButton = document.getElementById('startButton');
+            const pauseOverlay = document.getElementById('pauseOverlay');
+            const progressCircle = document.getElementById('progressCircle');
+
+            // --- Message Box Elements ---
+            const messageBox = document.getElementById('messageBox');
+            const messageTitle = document.getElementById('messageTitle');
+            const messageText = document.getElementById('messageText');
+            const messageCloseButton = document.getElementById('messageCloseButton');
+
+            // --- Audio Synths (using Tone.js) ---
+            // We initialize them here to be ready for use
+            let countdownBeep, startBeep, completeSynth;
+            
+            function setupAudio() {
+                try {
+                    countdownBeep = new Tone.Synth({
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 }
+                    }).toDestination();
+
+                    startBeep = new Tone.Synth({
+                        oscillator: { type: 'triangle' },
+                        envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.1 }
+                    }).toDestination();
+                
+                    completeSynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.05, decay: 0.2, sustain: 0.3, release: 0.5 }
+                    }).toDestination();
+                } catch (e) {
+                    console.error("Failed to initialize audio:", e);
+                    showMessage("Audio Error", "Could not initialize audio. Please refresh the page.");
+                }
+            }
+
+            // --- Workout Definition ---
+            const EXERCISES = [
+                "Jumping Jacks",
+                "Wall Sit",
+                "Push-ups",
+                "Abdominal Crunch",
+                "Step-up onto Chair",
+                "Squat",
+                "Triceps Dip on Chair",
+                "Plank",
+                "High Knees",
+                "Lunge",
+                "Push-up & Rotation",
+                "Side Plank" // User can switch halfway
+            ];
+            
+            const READY_TIME = 10;
+            const WORK_TIME = 30;
+            const REST_TIME = 10;
+            const CIRCLE_CIRCUMFERENCE = 339.29; // 2 * pi * 54
+
+            let workoutSequence = [];
+            let currentExerciseIndex = 0;
+            let timer = null;
+            let timeLeft = 0;
+            let isPaused = false;
+            let isStarted = false;
+
+            // --- Core Functions ---
+
+            /**
+             * Generates the full workout sequence array
+             */
+            function createWorkoutSequence() {
+                workoutSequence = []; // Reset sequence
+                workoutSequence.push({ type: 'ready', name: 'Get Ready', duration: READY_TIME });
+
+                EXERCISES.forEach((exercise, index) => {
+                    workoutSequence.push({ type: 'work', name: exercise, duration: WORK_TIME });
+                    if (index < EXERCISES.length - 1) {
+                        workoutSequence.push({ type: 'rest', name: 'Rest', duration: REST_TIME });
+                    }
+                });
+
+                workoutSequence.push({ type: 'complete', name: 'Workout Complete!', duration: 0 });
+            }
+
+            /**
+             * Main function to start or reset the workout
+             */
+            async function startWorkout() {
+                if (!isStarted) {
+                    // This is the first start, initialize audio on user interaction
+                    try {
+                        await Tone.start();
+                        setupAudio();
+                        console.log("Audio Context Started");
+                    } catch (e) {
+                        console.error("Tone.start() failed:", e);
+                        showMessage("Audio Error", "Could not start audio. Please ensure your browser allows audio playback.");
+                        return;
+                    }
+                }
+
+                // Reset all state variables
+                isStarted = true;
+                isPaused = false;
+                currentExerciseIndex = 0;
+                clearInterval(timer);
+                
+                createWorkoutSequence();
+                loadExercise(currentExerciseIndex);
+                startTimer();
+
+                startButton.textContent = "Restart Workout";
+                pauseOverlay.classList.add('hidden');
+            }
+
+            /**
+             * Loads the exercise at the given index into the UI
+             */
+            function loadExercise(index) {
+                const current = workoutSequence[index];
+                const next = workoutSequence[index + 1] || { name: "All Done!" };
+
+                timeLeft = current.duration;
+                updateTimerDisplay();
+
+                statusEl.textContent = current.type === 'work' ? 'Workout' : current.type;
+                exerciseEl.textContent = current.name;
+                nextExerciseEl.textContent = next.name;
+
+                // Update colors based on state
+                updateColors(current.type);
+
+                if (current.type === 'complete') {
+                    startButton.textContent = "Start Over?";
+                    playCompleteChime();
+                    isStarted = false;
+                    clearInterval(timer);
+                }
+            }
+            
+            /**
+             * Starts the 1-second interval timer
+             */
+            function startTimer() {
+                clearInterval(timer); // Clear any existing timer
+                timer = setInterval(tick, 1000);
+            }
+
+            /**
+             * The main timer "tick" function, called every second
+             */
+            function tick() {
+                if (isPaused) {
+                    return; // Do nothing if paused
+                }
+
+                if (timeLeft <= 0) {
+                    handleTimerEnd();
+                    return;
+                }
+                
+                timeLeft--;
+                updateTimerDisplay();
+
+                // Play audio cues
+                if (timeLeft === 3 || timeLeft === 2 || timeLeft === 1) {
+                    playCountdownBeep();
+                }
+            }
+            
+            /**
+             * Called when a timer reaches 0. Loads next exercise or ends.
+             */
+            function handleTimerEnd() {
+                clearInterval(timer);
+                currentExerciseIndex++;
+                
+                if (currentExerciseIndex < workoutSequence.length) {
+                    const currentType = workoutSequence[currentExerciseIndex].type;
+                    if (currentType === 'work' || currentType === 'rest') {
+                        playStartBeep(); // "Go" sound for next phase
+                    }
+                    loadExercise(currentExerciseIndex);
+                    
+                    // Only restart timer if not complete
+                    if (currentType !== 'complete') {
+                        startTimer();
+                    }
+                }
+            }
+
+            /**
+             * Toggles the pause state of the workout
+             */
+            function togglePause() {
+                if (!isStarted || workoutSequence[currentExerciseIndex].type === 'complete') {
+                    return; // Can't pause if not started or if complete
+                }
+                isPaused = !isPaused;
+                pauseOverlay.classList.toggle('hidden', !isPaused);
+            }
+
+            // --- UI & Audio Helper Functions ---
+
+            /**
+             * Updates the timer display and progress circle
+             */
+            function updateTimerDisplay() {
+                timerDisplay.textContent = timeLeft;
+                const totalDuration = workoutSequence[currentExerciseIndex].duration;
+                
+                // Calculate progress (0 to 1)
+                const progress = totalDuration > 0 ? (totalDuration - timeLeft) / totalDuration : 0;
+                
+                // Calculate SVG dash offset
+                const offset = CIRCLE_CIRCUMFERENCE * (1 - progress);
+                progressCircle.style.strokeDashoffset = offset;
+            }
+
+            /**
+             * Updates element colors based on the current state
+             * @param {string} type - 'ready', 'work', 'rest', or 'complete'
+             */
+            function updateColors(type) {
+                let colorClass = 'blue';
+                let suffix = '400'; // Dark theme
+                if (type === 'rest') colorClass = 'green';
+                if (type === 'ready') colorClass = 'indigo';
+                if (type === 'complete') {
+                    colorClass = 'gray';
+                    suffix = '500'; // Gray 400 is a bit light
+                }
+
+                // Remove old colors (both light and dark theme potentials)
+                ['blue', 'green', 'indigo', 'gray'].forEach(c => {
+                    statusEl.classList.remove(`text-${c}-600`);
+                    timerDisplay.classList.remove(`text-${c}-600`);
+                    progressCircle.classList.remove(`text-${c}-600`);
+                    statusEl.classList.remove(`text-${c}-400`);
+                    timerDisplay.classList.remove(`text-${c}-400`);
+                    progressCircle.classList.remove(`text-${c}-400`);
+                    statusEl.classList.remove(`text-${c}-500`);
+                    timerDisplay.classList.remove(`text-${c}-500`);
+                    progressCircle.classList.remove(`text-${c}-500`);
+                });
+
+                // Add new colors
+                statusEl.classList.add(`text-${colorClass}-${suffix}`);
+                timerDisplay.classList.add(`text-${colorClass}-${suffix}`);
+                progressCircle.classList.add(`text-${colorClass}-${suffix}`);
+            }
+
+            function playCountdownBeep() {
+                if (countdownBeep) {
+                    countdownBeep.triggerAttackRelease("C5", "0.1", Tone.now());
+                }
+            }
+
+            function playStartBeep() {
+                if (startBeep) {
+                    startBeep.triggerAttackRelease("G4", "0.2", Tone.now());
+                }
+            }
+
+            function playCompleteChime() {
+                if (completeSynth) {
+                    const now = Tone.now();
+                    completeSynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "0.5", now);
+                }
+            }
+            
+            /**
+             * Shows the generic message box
+             * @param {string} title - The title of the message.
+             * @param {string} text - The body text of the message.
+             */
+            function showMessage(title, text) {
+                messageTitle.textContent = title;
+                messageText.textContent = text;
+                messageBox.classList.remove('hidden');
+            }
+
+            // --- Event Listeners ---
+            startButton.addEventListener('click', startWorkout);
+            timerEl.addEventListener('click', togglePause);
+            
+            messageCloseButton.addEventListener('click', () => {
+                messageBox.classList.add('hidden');
+            });
+            
+            // --- Initial Setup ---
+            createWorkoutSequence();
+            loadExercise(0); // Load the "Get Ready" state initially
+
+        });
+    </script>
+</body>
+</html>
+
