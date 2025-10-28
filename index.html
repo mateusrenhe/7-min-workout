@@ -319,10 +319,12 @@
                         playStartBeep();
                     }
                     
-                    loadExercise(currentExerciseIndex); 
+                    loadExercise(currentExerciseIndex); // This resets the dial
                     
                     if (currentType !== 'complete') {
-                        startTimer(); // Start the timer for the new exercise
+                        // **NEW FIX**: Use setTimeout to let the browser render the
+                        // 'transition: none' reset *before* starting the new animation.
+                        setTimeout(startTimer, 0); 
                     }
                 }
             }
