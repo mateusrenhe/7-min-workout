@@ -19,7 +19,7 @@
         }
         /* Style for the SVG progress circle transition */
         #progressCircle {
-            transition: stroke-dashoffset 1s linear;
+            transition: stroke-dashoffset 1s ease-out; /* Changed linear to ease-out */
         }
     </style>
 </head>
@@ -32,7 +32,7 @@
         </div>
         
         <!-- Exercise Name: e.g., "Jumping Jacks" --><div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get Ready
+            Get ready to start!
         </div>
 
         <!-- Timer Circle (NOT Clickable for Pause Anymore) --><div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full shadow-inner flex items-center justify-center bg-gray-700 cursor-default"> <!-- Changed cursor-pointer to cursor-default --><!-- SVG for progress circle --><svg class="w-full h-full" viewBox="0 0 120 120">
@@ -297,8 +297,15 @@
                 }
 
                 if (timeLeft <= 0) {
-                    handleTimerEnd();
-                    return;
+                    // timeLeft is 0. updateTimerDisplay() just set the circle to animate to full (offset=0).
+                    // We must wait 1s for that animation to complete before loading the next exercise.
+                    clearInterval(timer); // Stop this timer from running again
+                    
+                    setTimeout(() => {
+                        handleTimerEnd(); // Now, 1s later, load the next thing
+                    }, 1000); // 1000ms = 1s, matching the CSS transition
+
+                    return; // Exit the tick function
                 }
                 
                 timeLeft--;
@@ -314,7 +321,7 @@
              * Called when a timer reaches 0. Loads next exercise or ends.
              */
             function handleTimerEnd() {
-                clearInterval(timer);
+                clearInterval(timer); // Clear timer again just in case
                 currentExerciseIndex++;
                 
                 if (currentExerciseIndex < workoutSequence.length) {
@@ -458,6 +465,7 @@
     </script>
 </body>
 </html>
+
 
 
 
