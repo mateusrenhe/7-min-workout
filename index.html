@@ -33,7 +33,7 @@
         
         <!-- Current Exercise Display -->
         <div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get Ready
+            Get ready to start!
         </div>
 
         <!-- Timer Element -->
@@ -292,15 +292,16 @@
                 const totalDuration = current.duration;
                 
                 // Calculate progress for one second *from* now
-                const progress = (totalDuration - (timeLeft - 1)) / totalDuration;
+                // Ensure progress is never greater than 1
+                const progress = Math.min(1, (totalDuration - (timeLeft - 1)) / totalDuration);
                 const offset = CIRCLE_CIRCUMFERENCE * (1 - progress);
 
                 // 3. Set the 1s animation and start it
                 progressCircle.style.transition = 'stroke-dashoffset 1s linear';
                 progressCircle.style.strokeDashoffset = offset;
 
-                // 4. Play audio cues for the *upcoming* number
-                if (timeLeft - 1 === 2 || timeLeft - 1 === 1 || timeLeft - 1 === 0) {
+                // 4. Play audio cues for the *upcoming* number (e.g., when 4 shows, beep for 3)
+                if (timeLeft - 1 === 3 || timeLeft - 1 === 2 || timeLeft - 1 === 1) {
                     playCountdownBeep();
                 }
 
@@ -357,6 +358,10 @@
                 // Instantly reset the circle to 0% full (offset = circumference)
                 progressCircle.style.transition = 'none';
                 progressCircle.style.strokeDashoffset = CIRCLE_CIRCUMFERENCE;
+
+                // **THE FIX**: Force browser to apply the 'transition: none' style *immediately*
+                // by triggering a reflow. This prevents the "slow rewind" animation.
+                void progressCircle.offsetWidth;
             }
 
 
