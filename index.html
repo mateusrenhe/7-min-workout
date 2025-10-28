@@ -242,12 +242,8 @@
 
                 timeLeft = current.duration;
 
-                // Update status text
-                if (current.type === 'ready' || current.type === 'complete') {
-                    statusEl.textContent = "7 Minute Workout";
-                } else {
-                    statusEl.textContent = current.type; // 'work' or 'rest'
-                }
+                // Update status text - Always keep the main title
+                statusEl.textContent = "7 Minute Workout";
 
                 exerciseEl.textContent = current.name;
                 nextExerciseEl.textContent = next.name;
@@ -383,7 +379,8 @@
                 const colors = ['blue', 'green', 'indigo', 'gray'];
                 const shades = ['400', '500', '600']; // Cover all bases
 
-                const elements = [statusEl, timerDisplay, progressCircle];
+                // Only update timer display and progress circle
+                const elements = [timerDisplay, progressCircle];
 
                 elements.forEach(el => {
                     colors.forEach(c => {
@@ -398,11 +395,7 @@
                     el.classList.add(`text-${colorClass}-${suffix}`);
                 });
 
-                // Special handling for title: don't change color if it's "7 Minute Workout"
-                if (type === 'ready' || type === 'complete') {
-                    statusEl.classList.remove(`text-${colorClass}-${suffix}`);
-                    statusEl.classList.add('text-blue-400'); // Default title color
-                }
+                // Removed special handling for title
             }
 
             function playNote(frequency, duration, type = 'sine') {
@@ -424,6 +417,8 @@
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + duration);
             }
+
+V
 
             function playCountdownBeep() {
                 playNote(880, 0.1, 'sine');
