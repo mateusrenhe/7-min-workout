@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>7 Minute Workout</title>
-    
-    <!-- Favicon Link --><!-- Use "favicon.ico" if you converted it. Place favicon.ico in the same directory as this HTML file. --><link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <!-- If you didn't convert to .ico and are using PNG directly, place favicon.png in the same directory: --><!-- <link rel="icon" type="image/png" href="/favicon.png"> --><!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
-    
+        <link rel="icon" type="image/png" href="favicon.png">
+        
     <style>
         /* Use the Inter font family */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -15,7 +13,7 @@
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            overscroll-behavior: none; /* Disables pull-to-refresh and bounce */
+            /* overscroll-behavior: none; */ /* REMOVED to allow pull-to-refresh */
         }
         /* Style for the SVG progress circle transition */
         #progressCircle {
@@ -23,9 +21,14 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen h-screen overflow-hidden">
+<body class="bg-gray-900 text-gray-100"> <!-- REMOVED flex items-center justify-center min-h-screen -->
 
-    <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 rounded-2xl shadow-xl text-center">
+    <!-- 
+      UPDATED classes for mobile-first full-screen:
+      - Mobile (default): min-h-screen, w-full (no rounded corners or shadow)
+      - Desktop (sm: and up): sm:min-h-0, sm:max-w-md, sm:mx-auto, sm:my-8, sm:rounded-2xl, sm:shadow-xl
+    -->
+    <main class="w-full bg-gray-800 text-center min-h-screen sm:min-h-0 sm:max-w-md sm:mx-auto sm:my-8 sm:rounded-2xl sm:shadow-xl p-6 sm:p-10">
         
         <!-- Status Display --><div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
             7 Minute Workout
@@ -456,5 +459,7 @@
     </script>
 </body>
 </html>
+
+
 
 
