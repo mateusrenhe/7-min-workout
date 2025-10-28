@@ -32,7 +32,7 @@
         </div>
         
         <!-- Exercise Name: e.g., "Jumping Jacks" --><div id="exerciseEl" class="h-16 text-3xl sm:text-4xl font-bold my-4 flex items-center justify-center">
-            Get Ready
+            Get ready to start!
         </div>
 
         <!-- Timer Circle (NOT Clickable for Pause Anymore) --><div id="timerEl" class="relative w-56 h-56 sm:w-64 sm:h-64 mx-auto my-6 rounded-full shadow-inner flex items-center justify-center bg-gray-700 cursor-default"> <!-- Changed cursor-pointer to cursor-default --><!-- SVG for progress circle --><svg class="w-full h-full" viewBox="0 0 120 120">
@@ -316,10 +316,9 @@
                     // This handles the case *after* the last second (e.g., "1") has finished its animation
                     clearInterval(timer); // Stop this timer from running again
                     
-                    // We *still* wait 1s for the last animation (from 1 to 0) to finish
-                    setTimeout(() => {
-                        handleTimerEnd(); // Now, 1s later, load the next thing
-                    }, 1000); // 1000ms = 1s, matching the CSS transition
+                    // REMOVED: The 1-second setTimeout delay.
+                    // This will now move to the next exercise immediately.
+                    handleTimerEnd(); 
 
                     return; // Exit the tick function
                 }
@@ -474,7 +473,7 @@
 
             function playCompleteChime() {
                 if (!isAudioReady || !audioContext) return;
-                const now = audioContext.currentTime;
+                // const now = audioContext.currentTime; // This line wasn't used, removing
                 // Play a simple C-E-G-C arpeggio
                 playNote(523.25, 0.3, 'sine'); // C5
                 playNote(659.25, 0.3, 'sine'); // E5
@@ -493,6 +492,7 @@
     </script>
 </body>
 </html>
+
 
 
 
