@@ -157,38 +157,19 @@
                 return;
             }
 
-            // --- FIX 1: Make the unlock function more robust ---
-            // This now checks the audio state *after* attempting to resume,
-            // which is more reliable than just assuming it worked.
             async function unlockAudio() {
-                if (audioContext.state === 'running') {
+                if (isAudioReady) return;
+                try {
+                    await audioContext.resume();
                     isAudioReady = true;
-                    return;
-                }
-                
-                // Only try to resume if it's suspended
-                if (audioContext.state === 'suspended') {
-                    try {
-                        await audioContext.resume();
-                        // Re-check the state after attempting resume
-                        isAudioReady = (audioContext.state === 'running');
-                        
-                        if (isAudioReady) {
-                            console.log("Audio Context Unlocked.");
-                        } else {
-                            console.warn("Audio context resume() was called but state is still:", audioContext.state);
-                        }
-                    } catch (e) {
-                        console.warn("Error resuming audio context:", e);
-                        isAudioReady = false; // Explicitly set to false on error
-                    }
+                    console.log("Audio Context Unlocked.");
+                } catch (e) {
+                    console.warn("Could not unlock audio context:", e);
                 }
             }
             
-            // --- FIX 2: Removed redundant body click listener ---
-            // document.body.addEventListener('click', unlockAudio, { once: true });
-            // This listener was creating a race condition with the 'Start' button.
-            // The 'Start' button's click handler will now manage unlocking.
+            // Try to unlock on any first click, for restrictive environments
+            document.body.addEventListener('click', unlockAudio, { once: true });
             
             // --- Workout Definition ---
             const EXERCISES = [
@@ -504,4 +485,3 @@
     </script>
 </body>
 </html>
-
