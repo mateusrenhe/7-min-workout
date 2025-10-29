@@ -141,7 +141,7 @@
                 messageBox.classList.add('hidden');
             });
 
-           // --- Native Web Audio API Setup ---
+        // --- Native Web Audio API Setup ---
             let audioContext = null; // Start as null
             let isAudioReady = false;
 
@@ -149,39 +149,54 @@
              * Creates or resumes the AudioContext on the first user tap.
              */
             async function initAudio() {
-                if (isAudioReady) return; // Already initialized
+                // 1. Stop if we're already good
+                if (isAudioReady) return; 
 
                 try {
+                    // 2. Create the context if it doesn't exist
                     if (!audioContext) {
-                        // Create it for the first time *inside* the user click
                         audioContext = new (window.AudioContext || window.webkitAudioContext)();
                         console.log("Audio Context Created.");
                     }
                     
-                    // Whether just created or already suspended, resume it.
-                    await audioContext.resume(); 
-                    
-                    // Check if it's *actually* running
+                    // 3. Try to resume it if it's suspended
+                    if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                        console.log("Audio Context resume attempted.");
+                    }
+
+                    // 4. iOS HACK: Play a silent buffer to "unlock" the audio hardware.
+                    // This is the key change.
+                    const buffer = audioContext.createBuffer(1, 1, 22050); // 1-sample empty buffer
+                    const source = audioContext.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioContext.destination);
+                    source.start(0); // Play silent sound
+                    console.log("Played silent unlock sound.");
+
+                    // 5. Check the state *after* the hack
                     if (audioContext.state === 'running') {
                         isAudioReady = true;
                         console.log("Audio Context is running.");
                     } else {
-                        console.warn("Audio Context state is not 'running' after resume:", audioContext.state);
+                        // This is the most likely failure point.
+                        console.warn("Audio Context state is still not 'running':", audioContext.state);
                     }
                 
                 } catch (e) {
                     console.error("Error initializing Audio Context:", e);
                     
-                    // Check if the API is missing entirely
                     if (!window.AudioContext && !window.webkitAudioContext) {
                          showMessage("Audio Error", "Your browser does not support the Web Audio API needed for sounds.");
                          startButton.disabled = true;
                          startButton.textContent = "Audio Not Supported";
                          startButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    } else {
-                        // This is the error you were seeing. We let the user try again.
-                        showMessage("Audio Error", "Could not start audio. Please tap 'OK' and try starting again.");
                     }
+                }
+                
+                // 6. If it *still* failed, show a more helpful error message
+                if (!isAudioReady) {
+                    showMessage("Audio Error", "Could not start audio. Please check if your phone's 'Silent Mode' switch is OFF, then tap 'OK' and try starting again.");
                 }
             }
             
