@@ -31,7 +31,7 @@
     <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 rounded-2xl shadow-xl text-center">
         
         <!-- Status Display -->
-        <div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-400">
+        <div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-500">
             7 Minute Workout
         </div>
         
@@ -390,14 +390,14 @@
                 
                 if (type === 'work') colorClass = 'blue';
                 if (type === 'rest') colorClass = 'green';
-                if (type === 'ready') colorClass = 'indigo';
+                if (type === 'ready') colorClass = 'blue';
                 if (type === 'complete') {
                     colorClass = 'gray';
                     suffix = '500';
                 }
 
                 // List of all possible colors to remove
-                const colors = ['blue', 'green', 'indigo', 'gray'];
+                const colors = ['blue', 'green', 'blue', 'gray'];
                 const shades = ['400', '500', '600']; // Cover all bases
 
                 // Only update timer display and progress circle
