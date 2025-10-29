@@ -98,6 +98,10 @@
 
     </main>
 
+    <audio id="audioUnlocker" src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTG93IFF1YWxpdHkgV2F2ZSBTb3VuZCBTYW1wbGUBAAUmRcmgAAAAEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTG93IFF1YWxpdHkgV2F2ZSBTYW1wbGUBAAUmRcmgAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVType"></audio>
+
+    <div id="messageBox" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+
     <!-- Generic Message Box -->
     <div id="messageBox" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
@@ -114,6 +118,11 @@
         window.addEventListener('load', () => {
             
             // --- DOM Elements ---
+            // --- DOM Elements ---
+            const statusEl = document.getElementById('statusEl');
+            // ...
+            const progressCircle = document.getElementById('progressCircle');
+            const audioUnlocker = document.getElementById('audioUnlocker'); // <-- ADD THIS
             const statusEl = document.getElementById('statusEl');
             const exerciseEl = document.getElementById('exerciseEl');
             const timerDisplay = document.getElementById('timerDisplay');
@@ -141,66 +150,57 @@
                 messageBox.classList.add('hidden');
             });
 
-        // --- Native Web Audio API Setup ---
+       // --- Native Web Audio API Setup ---
             let audioContext = null; // Start as null
             let isAudioReady = false;
 
             /**
              * Creates or resumes the AudioContext on the first user tap.
+             * This version uses the HTML5 audio hack for iOS.
              */
             async function initAudio() {
-                // 1. Stop if we're already good
-                if (isAudioReady) return; 
+                if (isAudioReady) return;
 
+                // 1. Try to unlock using the HTML5 <audio> element first.
                 try {
-                    // 2. Create the context if it doesn't exist
+                    // Play the silent MP3
+                    await audioUnlocker.play();
+                    console.log("HTML5 audio unlock succeeded.");
+
+                } catch (e) {
+                    console.error("HTML5 audio .play() failed:", e);
+                    // This is the most common failure point.
+                    showMessage("Audio Error", "Could not start audio. Please check if your phone's 'Silent Mode' switch is OFF, then tap 'OK' and try starting again.");
+                    return; // Stop here
+                }
+
+                // 2. If HTML5 audio worked, *now* try to start the Web Audio API.
+                try {
                     if (!audioContext) {
                         audioContext = new (window.AudioContext || window.webkitAudioContext)();
                         console.log("Audio Context Created.");
                     }
                     
-                    // 3. Try to resume it if it's suspended
                     if (audioContext.state === 'suspended') {
                         await audioContext.resume();
                         console.log("Audio Context resume attempted.");
                     }
 
-                    // 4. iOS HACK: Play a silent buffer to "unlock" the audio hardware.
-                    // This is the key change.
-                    const buffer = audioContext.createBuffer(1, 1, 22050); // 1-sample empty buffer
-                    const source = audioContext.createBufferSource();
-                    source.buffer = buffer;
-                    source.connect(audioContext.destination);
-                    source.start(0); // Play silent sound
-                    console.log("Played silent unlock sound.");
-
-                    // 5. Check the state *after* the hack
+                    // 3. Final check
                     if (audioContext.state === 'running') {
                         isAudioReady = true;
-                        console.log("Audio Context is running.");
+                        console.log("Web Audio Context is running.");
                     } else {
-                        // This is the most likely failure point.
-                        console.warn("Audio Context state is still not 'running':", audioContext.state);
+                        // This should not happen, but if it does...
+                        console.warn("Web Audio Context state is still not 'running':", audioContext.state);
+                        showMessage("Audio Error", "Audio is unresponsive. Please try closing the app completely (from the app switcher) and re-opening it.");
                     }
-                
+
                 } catch (e) {
-                    console.error("Error initializing Audio Context:", e);
-                    
-                    if (!window.AudioContext && !window.webkitAudioContext) {
-                         showMessage("Audio Error", "Your browser does not support the Web Audio API needed for sounds.");
-                         startButton.disabled = true;
-                         startButton.textContent = "Audio Not Supported";
-                         startButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    }
-                }
-                
-                // 6. If it *still* failed, show a more helpful error message
-                if (!isAudioReady) {
-                    showMessage("Audio Error", "Could not start audio. Please check if your phone's 'Silent Mode' switch is OFF, then tap 'OK' and try starting again.");
+                    console.error("Error initializing Web Audio Context:", e);
+                    showMessage("Audio Error", "Your browser does not seem to support the Web Audio API.");
                 }
             }
-            
-            // (Make sure the 'document.body.addEventListener' line is deleted, as per our last attempt)
             
             // --- Workout Definition ---
             const EXERCISES = [
