@@ -32,7 +32,7 @@
   Added 'sm:items-center' to re-apply vertical centering on small screens and up.
   This allows the <main> element to fill the screen's height on mobile.
 -->
-<body class="bg-gray-800 md:bg-gray-900 text-gray-100 flex justify-center min-h-screen overflow-hidden md:overflow-auto sm:items-center">
+<body class="bg-gray-800 md:bg-gray-900 text-gray-100 flex justify-center min-h-dvh overflow-hidden md:overflow-auto sm:items-center">
 
     <!-- 
       EDIT 2:
@@ -40,7 +40,7 @@
       - Added 'sm:block sm:min-h-0' to revert it to a standard block element on small screens and up.
       - Changed 'rounded-2xl md:shadow-xl' to 'sm:rounded-2xl sm:shadow-xl' so that it only looks like a card on non-mobile screens.
     -->
-    <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 text-center flex flex-col justify-around min-h-screen sm:block sm:min-h-0 sm:rounded-2xl sm:shadow-xl">
+    <main class="w-full max-w-md p-6 sm:p-10 bg-gray-800 text-center flex flex-col justify-around min-h-dvh sm:block sm:min-h-0 sm:rounded-2xl sm:shadow-xl">
         
         <!-- Status Display -->
         <div id="statusEl" class="h-8 text-2xl font-bold uppercase tracking-wider text-blue-500">
